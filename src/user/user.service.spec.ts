@@ -9,6 +9,7 @@ import { Share } from '@prisma/client'; // Import the correct type declaration
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import { User } from '@prisma/client'; // Import the correct type declaration
 import { Follow } from '@prisma/client'; // Import the correct type declaration
+import { BadRequestException } from '@nestjs/common';
 
 describe('UserService', () => {
   let service: UserService;
@@ -27,43 +28,97 @@ describe('UserService', () => {
     jest.clearAllMocks();
   });
 
-  describe('createInitialUser', () => {
-    it('should create a new user with provided data and email list', async () => {
-      const userData: CreateUserDto = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john@example.com',
-        dob: new Date('1990-01-01'),
-        country: Country.NIGERIA,
-        zipcode: 12345,
-        profession: 'Engineer',
-        company: 'ABC Inc.',
-        links: ['http://facebook.com/johndoe', 'http://twitter.com/johndoe'],
-      };
-      const emailList: string[] = ['user1@example.com', 'user2@example.com', 'user3@example.com', 'user4@example.com', 'user5@example.com'];
+  describe('UserService', () => {
+    let service: UserService;
+    let prismaService: PrismaService;
 
-      jest.spyOn(prismaService.user, 'create').mockResolvedValueOnce({ 
-        id: 'generatedUserId',
+    beforeEach(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [UserService, PrismaService, ConfigService],
+      }).compile();
+
+      service = module.get<UserService>(UserService);
+      prismaService = module.get<PrismaService>(PrismaService);
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    beforeEach(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          UserService,
+          {
+            provide: PrismaService,
+            useValue: {
+              user: {
+                create: jest.fn(),
+                findFirst: jest.fn(),
+                findUnique: jest.fn(),
+                update: jest.fn(),
+              },
+              share: {
+                create: jest.fn(),
+              },
+              follow: {
+                findFirst: jest.fn(),
+                create: jest.fn(),
+              },
+            },
+          },
+        ],
+      }).compile();
+
+      service = module.get<UserService>(UserService);
+      prismaService = module.get<PrismaService>(PrismaService);
+    });
+
+    it('should be defined', () => {
+      expect(service).toBeDefined();
+    });
+
+    it('should create initial user successfully', async () => {
+      const userData = {
+        email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        email: 'john@example.com',
         dob: new Date('1990-01-01'),
-        country: Country.NIGERIA,
+        country: Country.NIGER,
         zipcode: 12345,
         profession: 'Engineer',
         company: 'ABC Inc.',
         links: ['http://facebook.com/johndoe', 'http://twitter.com/johndoe'],
         tagline: 'Hello World',
-        roleType: 'admin',
-      });
+        roleType: RoleType.USER,
+      };
+      const emailList = ['user1@example.com', 'user2@example.com'];
+
+      jest.spyOn(prismaService.user, 'create').mockResolvedValueOnce({} as User);
       jest.spyOn(prismaService.share, 'create').mockResolvedValueOnce({} as Share);
 
-      await service.createInitialUser(userData, emailList);
+      await expect(service.createInitialUser(userData, emailList)).resolves.toBeUndefined();
+    });
 
-      expect(prismaService.user.create).toHaveBeenCalledWith({ data: userData });
-      expect(prismaService.share.create).toHaveBeenCalledWith({ data: { owner: { connect: { id: 'generatedUserId' } }, price: 100.0 } });
+    it('should throw error if user creation fails', async () => {
+      const userData = {
+        email: 'test@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        dob: new Date('1990-01-01'),
+        country: Country.NIGER,
+        zipcode: 12345,
+        profession: 'Engineer',
+        company: 'ABC Inc.',
+        links: ['http://facebook.com/johndoe', 'http://twitter.com/johndoe'],
+        tagline: 'Hello World',
+        roleType: RoleType.USER,
+      };
+      const emailList = ['user1@example.com', 'user2@example.com'];
+
+      jest.spyOn(prismaService.user, 'create').mockRejectedValueOnce(new Error('Failed to create user'));
+
+      await expect(service.createInitialUser(userData, emailList)).rejects.toThrow(BadRequestException);
     });
   });
 

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RoleType } from './dto/enums';
+import moment from 'moment';
 
 @Injectable()
 export class UserService {
@@ -12,6 +13,7 @@ export class UserService {
     try {
       console.log('userData:', userData);
       const { email, firstName, lastName, dob, country, zipcode, profession, company, tagline, links } = userData;
+      const dobDate: Date = moment(dob, 'YYYY-MM-DD').toDate();
 
       // Create the user
       const user = await this.prisma.user.create({
@@ -19,7 +21,7 @@ export class UserService {
           email,
           firstName,
           lastName,
-          dob,
+          dob: dobDate,
           country,
           zipcode,
           profession,
@@ -40,44 +42,56 @@ export class UserService {
 
       // Create initial users if emails are provided
       if (emailList && emailList.length > 0) {
+        // Inside the for loop for creating initial users
         for (const email of emailList) {
-          // Create user data object with minimal fields
-          const newUser: CreateUserDto = {
-            email,
-            firstName: null,
-            lastName: null,
-            dob: null,
-            country: null,
-            zipcode: null,
-            profession: null,
-            company: null,
-            links: [],
-            tagline: null,
-            roleType: RoleType.USER, // Assuming it's a regular user
-          };
-
-          // Create the new user with minimal data
-          const newUserData = await this.prisma.user.create({
-            data: {
-              ...newUser,
+          // Check if the email already exists in the database
+          const existingUser = await this.prisma.user.findFirst({
+            where: {
+              email: email,
             },
           });
 
+          if (!existingUser) {
+            // Create user data object with minimal fields
+            const newUser: CreateUserDto = {
+              email,
+              firstName: null,
+              lastName: null,
+              dob: null,
+              country: null,
+              zipcode: null,
+              profession: null,
+              company: null,
+              links: [],
+              tagline: null,
+              roleType: RoleType.USER, // Assuming it's a regular user
+            };
 
-          // If other users have email only, assign 0ω
-          if (!newUser.firstName && !newUser.lastName && !newUser.dob && !newUser.country && !newUser.zipcode && !newUser.profession && !newUser.company && !newUser.links && !newUser.tagline) {
-            await this.prisma.share.create({
+            // Create the new user with minimal data
+            const newUserData = await this.prisma.user.create({
               data: {
-                owner: { connect: { id: newUserData.id } },
-                price: 0.0,
+                ...newUser,
               },
             });
-          } else {
-            // If other fields are provided, run followUser for current user's ID and email ID
-            await this.followUser(user.id, newUserData.id);
+
+            // If other users have email only, assign 0ω
+            if (!newUser.firstName && !newUser.lastName && !newUser.dob && !newUser.country && !newUser.zipcode && !newUser.profession && !newUser.company && (!newUser.links || newUser.links.length === 0) && !newUser.tagline) {
+              // Otherwise, create a new share for the user
+              await this.prisma.share.create({
+                data: {
+                  owner: { connect: { id: newUserData.id } },
+                  price: 0.0,
+                },
+              });
+            } else {
+              // If other fields are provided, run followUser for current user's ID and email ID
+              await this.followUser(user.id, newUserData.id);
+            }
           }
         }
+
       }
+      return console.log("User successfully created");
     } catch (error) {
       console.error('Error in createInitialUser:', error.message);
       throw new BadRequestException('Error creating initial user');
