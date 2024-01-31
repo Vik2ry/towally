@@ -230,6 +230,8 @@ model User {
   links          String[]
   shares        Share[]
   tagline       String?
+  followers     Follow[]      @relation("UserToFollowers")
+  following     Follow[]      @relation("UserToFollowing")
   transactions  Transaction[] @relation("Buyer")
   transactions2 Transaction[] @relation("Seller")
   roleType      RoleType?
@@ -244,8 +246,6 @@ model Share {
   price        Float         @default(1.0) // Price in ω
   sold         Boolean       @default(false)
   transactions Transaction[]
-  followers     Follow[]      @relation("ShareToFollowers")
-  following     Follow[]      @relation("ShareToFollowing")
   // Add other fields as needed
 
   @@map("Share")
@@ -271,9 +271,9 @@ model Transaction {
 
 model Follow {
   id          String @id @default(uuid())
-  follower    Share   @relation("ShareToFollowers", fields: [followerId], references: [id])
+  follower    User   @relation("UserToFollowers", fields: [followerId], references: [id])
   followerId  String
-  following   Share   @relation("ShareToFollowing", fields: [followingId], references: [id])
+  following   User   @relation("UserToFollowing", fields: [followingId], references: [id])
   followingId String
   // Add other fields as needed
 

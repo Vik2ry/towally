@@ -100,21 +100,43 @@ export class UserService {
 
 
   async enterUserData(userId: string, userData: UpdateUserDto): Promise<void> {
+    const dobDate: Date = moment(userData.dob, 'YYYY-MM-DD').toDate();
     try {
-      const user = await this.prisma.user.update({
-        where: { id: userId },
+      await this.prisma.user.update({
+        where: {
+          id: userId
+        },
         data: {
-          ...userData,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          dob: dobDate, // Set dob to the parsed Date object
+          country: userData.country,
+          zipcode: userData.zipcode,
+          profession: userData.profession,
+          company: userData.company,
+          links: userData.links,
+        }
+      });
+      await this.prisma.share.create({
+        data: {
+          owner: { connect: { id: userId } }, // Connect to the updated user
+          price: 100.0,
         },
       });
+      return console.log("User data successfully updated");
     } catch (error) {
+      console.log('Error updating user data', error.message)
       throw new BadRequestException('Error updating user data');
     }
   }
 
-  async followUser(userId: string, userToFollowId: string): Promise<void> {
+  async followUser(userId: string, userBeenFollowed: string): Promise<void> {
     try {
       // Check if the user exists
+      if (userId === userBeenFollowed) {
+        throw new BadRequestException('Cannot follow yourself');
+      }
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
       });
@@ -124,7 +146,7 @@ export class UserService {
 
       // Check if the user to follow exists
       const userToFollow = await this.prisma.user.findUnique({
-        where: { id: userToFollowId },
+        where: { id: userBeenFollowed },
       });
       if (!userToFollow) {
         throw new BadRequestException('User to follow not found');
@@ -134,22 +156,45 @@ export class UserService {
       const existingFollow = await this.prisma.follow.findFirst({
         where: {
           followerId: userId,
-          followingId: userToFollowId,
+          followingId: userBeenFollowed,
         },
       });
       if (existingFollow) {
         throw new BadRequestException('User is already following this user');
       }
 
-      // Create a new follow relationship
-      await this.prisma.follow.create({
-        data: {
-          followerId: userId,
-          followingId: userToFollowId,
-        },
+      // Find the user's share
+      const userShare = await this.prisma.share.findFirst({
+        where: { ownerId: userBeenFollowed }, // Assuming 'ownerId' is the field that connects to the user being followed
       });
+
+      // If the user has a share, update its price
+      if (userShare && userShare.price > 0.0) {
+        await this.prisma.share.update({
+          where: { id: userShare.id }, // Provide the unique identifier of the share
+          data: {
+            price: {
+              increment: 1.0, // Increase by 1.0
+            },
+          },
+        });
+        // Create a new follow relationship
+        await this.prisma.follow.create({
+          data: {
+            followerId: userId,
+            followingId: userBeenFollowed,
+          },
+        });
+
+        return console.log("User successfully followed");
+      }
+      else {
+        throw new BadRequestException('User has no share and must update their profile');
+      }
     } catch (error) {
+      console.error('Error in followUser:', error.message);
       throw new BadRequestException('Error following user');
     }
   }
+
 }

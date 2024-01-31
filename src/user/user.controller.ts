@@ -11,22 +11,24 @@ export class UserController {
 
   @Post('create')
   async createUser(@Body() createUserWithListDto: CreateUserWithListDto): Promise<void> {
-    console.log('createUserWithListDto:', createUserWithListDto);
     const { userData, emailList } = createUserWithListDto;
     await this.userService.createInitialUser(userData, emailList);
   }
 
   @Patch(':userId/enter-data')
   async enterUserData(@Param('userId') userId: string, @Body() userDataDto: UpdateUserDto) {
+    userDataDto.dob = new Date(userDataDto.dob); // Convert dob to a Date object
     return this.userService.enterUserData(userId, userDataDto);
   }
 
-  @Post(':userId/:userToFollowId')
+  @Post(':userId/:userBeenFollowed')
   async followUser(
     @Param('userId') userId: string,
-    @Param('userToFollowId') userToFollowId: string
+    @Param('userBeenFollowed') userBeenFollowed: string
   ) {
-    return this.userService.followUser(userId, userToFollowId);
+    console.log('userId:', userId);
+    console.log('userBeenFollowed:', userBeenFollowed)
+    return this.userService.followUser(userId, userBeenFollowed);
   }
 
 }

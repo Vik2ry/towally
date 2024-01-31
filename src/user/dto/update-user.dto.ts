@@ -6,11 +6,14 @@ import {
     IsInt,
     IsNotEmpty,
     IsDateString,
+    IsArray,
+    ArrayNotEmpty,
 } from 'class-validator';
 import { Country } from "./enums";
 
 export class UpdateUserDto {
     @IsEmail()
+    @IsNotEmpty()
     email: string;
 
     @IsString()
@@ -45,7 +48,8 @@ export class UpdateUserDto {
     @IsOptional()
     company?: string;
 
-    @IsString()
+    @IsArray()
+    @ArrayNotEmpty()
     @IsOptional()
-    link?: string[];
+    links?: string[];
 }
