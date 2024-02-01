@@ -68,7 +68,6 @@ describe('App e2e', () => {
         .post('/users/create')
         .withBody(dto)
         .expectStatus(201)
-        .stores('userId', 'userId')
     });
   });
 
@@ -77,13 +76,24 @@ describe('App e2e', () => {
       return pactum
           .spec()
           .get('/users/{email}')
-          .withPathParams('email', 'user1@example.com')
+          .withPathParams('email', 'test@example.com')
           .expectStatus(200)
-          .expectBodyContains('$S{email}')
-          .stores('ided', 'userId');
+          .expectBodyContains('$S{userId}')
+          .stores('userId', 'userId');
       });
     });
 
+    describe('getUserID', () => {
+      it('should return the user ID for a valid email', async () => {
+        return pactum
+            .spec()
+            .get('/users/{email}')
+            .withPathParams('email', 'user1@example.com')
+            .expectStatus(200)
+            .stores('ided', 'userId');
+        });
+      });
+  
   describe('Edit user', () => {
     it('should edit user', () => {
       const dto: UpdateUserDto = {
@@ -100,7 +110,7 @@ describe('App e2e', () => {
         }
       return pactum
         .spec()
-        .patch('users/{UserBeenFollowed}/enter-data')
+        .patch('/users/{UserBeenFollowed}/enter-data')
         .withPathParams('UserBeenFollowed', '$S{userId}')
         .expectStatus(200)
         .expectBodyContains(dto.firstName)
