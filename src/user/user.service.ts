@@ -1,10 +1,10 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RoleType } from './dto/enums';
 import moment from 'moment';
-
+import { User } from '.prisma/client';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) { }
@@ -98,6 +98,17 @@ export class UserService {
     }
   }
 
+  async getUserId(email: string) {
+    // Find the user by email
+    return this.prisma.user.findFirst({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
 
   async enterUserData(userId: string, userData: UpdateUserDto): Promise<void> {
     const dobDate: Date = moment(userData.dob, 'YYYY-MM-DD').toDate();

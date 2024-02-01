@@ -1,5 +1,5 @@
 // user.controller.ts
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post, Get, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,6 +19,19 @@ export class UserController {
   async enterUserData(@Param('userId') userId: string, @Body() userDataDto: UpdateUserDto) {
     userDataDto.dob = new Date(userDataDto.dob); // Convert dob to a Date object
     return this.userService.enterUserData(userId, userDataDto);
+  }
+
+  @Get(':email')
+  async getUserId(@Param('email') email: string) {
+    try {
+      const userId = await this.userService.getUserId(email);
+      if (!userId) {
+        throw new NotFoundException('User not found');
+      }
+      return { userId };
+    } catch (error) {
+      throw new InternalServerErrorException('Error retrieving user ID');
+    }
   }
 
   @Post(':userId/:userBeenFollowed')
