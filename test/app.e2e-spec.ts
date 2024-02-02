@@ -9,18 +9,26 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { CreateUserWithListDto } from '../src/user/dto/create-user-with-list.dto';
 import { Country, RoleType } from '../src/user/dto/enums';
 import { UpdateUserDto } from '../src/user/dto/update-user.dto';
-import { TradeSharesDTO } from 'src/investor/dto/trade-shares.dto';
-import { TradeCurrencyDTO } from 'src/investor/dto/trade-currency.dto';
-import { AdminTradeCurrencyDTO } from 'src/admin/dto/admin-trade-currency.dto';
+import { TradeSharesDTO } from '../src/investor/dto/trade-shares.dto';
+import { TradeCurrencyDTO } from '../src/investor/dto/trade-currency.dto';
+import { AdminTradeCurrencyDTO } from '../src/admin/dto/admin-trade-currency.dto';
+import { AdminService } from '../src/admin/admin.service';
+import { UserService } from '../src/user/user.service';
+import { InvestorService } from '../src/investor/investor.service';
+import { FreezeUserAccountDto } from 'src/admin/dto/freeze-user-account.dto';
 
 describe('App e2e', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let adminService: AdminService;
+  let userService: UserService;
+  let investorService: InvestorService;
 
   beforeAll(async () => {
     const moduleRef =
       await Test.createTestingModule({
         imports: [AppModule],
+        providers: [PrismaService, AdminService, UserService, InvestorService],
       }).compile();
 
     app = moduleRef.createNestApplication();
@@ -37,6 +45,10 @@ describe('App e2e', () => {
     pactum.request.setBaseUrl(
       'http://localhost:3333',
     );
+    adminService = moduleRef.get<AdminService>(AdminService);
+    userService = moduleRef.get<UserService>(UserService);
+    investorService = moduleRef.get<InvestorService>(InvestorService);
+    
   });
 
   afterAll(() => {
@@ -106,6 +118,7 @@ describe('App e2e', () => {
           company: 'ABC Inc.',
           links: ['http://facebook.com/johndoe', 'http://twitter.com/johndoe'],
           tagline: 'Hello World',
+          roleType: RoleType.INVESTOR,
         }
         return pactum
           .spec()
@@ -115,6 +128,7 @@ describe('App e2e', () => {
           .expectStatus(200)
           .expectBodyContains("updatedUser")
           .expectBodyContains(100)
+          .stores('userI', 'userI')
           .inspect()
       });
     });
@@ -153,7 +167,7 @@ describe('App e2e', () => {
           .withPathParams('ided', '$S{ided}')
           .expectStatus(200)
           .expectBodyContains("shareId")
-          .stores('shareId', 'shareId')
+          .stores('shareIds', 'shareId')
           .inspect()
       });
     });
@@ -161,14 +175,14 @@ describe('App e2e', () => {
     describe('Trade shares', () => {
       it('should trade shares', () => {
         const tradeData: TradeSharesDTO = {
-          shareId: "100",
+          shareId: '$S{shareIds}',
           action: 'BUY',
-          price: 100,
+          price: 1,
         }
         return pactum
           .spec()
-          .post('/investor/trade-shares/{userId}')
-          .withPathParams('userId', '$S{userId}')
+          .post('/investor/trade-shares/{userI}')
+          .withPathParams('userI', '$S{userI}')
           .withBody(tradeData)
           .expectStatus(201)
           .inspect()
@@ -225,10 +239,13 @@ describe('App e2e', () => {
 
     describe('Freeze user account', () => {
       it('should freeze user account', () => {
+        const dto: FreezeUserAccountDto = {
+          userId: ('$S{userId}'),
+        }
         return pactum
           .spec()
           .post('/admin/freeze-user-account')
-          .withBody('userId')
+          .withBody(dto)
           .expectStatus(201)
           .inspect()
       });

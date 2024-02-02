@@ -25,6 +25,7 @@ export class InvestorController {
   @Get('share-id/:userId')
   async getShareIdForUser(@Param('userId') userId: string): Promise<{ shareId: string }> {
     const shareId = await this.investorService.getShareIdForUser(userId);
+    console.log('shareId of getShareIdForUser: ', shareId);
     return { shareId };
   }
 }

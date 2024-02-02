@@ -181,6 +181,9 @@ export class InvestorService {
         where: {
           ownerId: userId,
         },
+        select: {
+          id: true,
+        },
       });
 
       if (!share) {

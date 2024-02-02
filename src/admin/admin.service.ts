@@ -68,6 +68,7 @@ export class AdminService {
         where: { id: userId },
         data: { status: 'INACTIVE' },
       });
+      console.log('User account frozen successfully.');
     } catch (error) {
       throw new BadRequestException('Failed to freeze user account.');
     }
