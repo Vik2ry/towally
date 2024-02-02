@@ -9,7 +9,7 @@ import { User } from '.prisma/client';
 export class UserService {
   constructor(private prisma: PrismaService) { }
 
-  async createInitialUser(userData: CreateUserDto, emailList: string[]): Promise<void> {
+  async createInitialUser(userData: CreateUserDto, emailList: string[]) {
     try {
       console.log('userData:', userData);
       const { email, firstName, lastName, dob, country, zipcode, profession, company, tagline, links } = userData;
@@ -96,7 +96,7 @@ export class UserService {
         }
 
       }
-      return console.log("User successfully created");
+      return user;
     } catch (error) {
       console.error('Error in createInitialUser:', error.message);
       throw new BadRequestException('Error creating initial user');

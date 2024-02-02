@@ -10,9 +10,9 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Post('create')
-  async createUser(@Body() createUserWithListDto: CreateUserWithListDto): Promise<void> {
+  async createUser(@Body() createUserWithListDto: CreateUserWithListDto) {
     const { userData, emailList } = createUserWithListDto;
-    await this.userService.createInitialUser(userData, emailList);
+    return this.userService.createInitialUser(userData, emailList);
   }
 
   @Patch(':userId/enter-data')

@@ -48,7 +48,7 @@ describe('App e2e', () => {
     adminService = moduleRef.get<AdminService>(AdminService);
     userService = moduleRef.get<UserService>(UserService);
     investorService = moduleRef.get<InvestorService>(InvestorService);
-    
+
   });
 
   afterAll(() => {
@@ -82,6 +82,33 @@ describe('App e2e', () => {
       });
     });
 
+    describe('Create user', () => {
+      it('should create a user', () => {
+        const dto: CreateUserWithListDto = {
+          userData: {
+            email: "test1010@example.com",
+            firstName: "John",
+            lastName: "Doe",
+            dob: new Date('1990-01-01'),
+            country: Country.NIGER,
+            zipcode: 12345,
+            profession: "Engineer",
+            company: "ABC Inc.",
+            links: ["http://facebook.com/johndoe", "http://twitter.com/johndoe"],
+            tagline: "Hello World",
+            roleType: RoleType.INVESTOR,
+          },
+          emailList: ["user001@example.com", "user002@example.com", "user003@example.com", "user004@example.com", "user005@example.com"],
+        };
+        return pactum
+          .spec()
+          .post('/users/create')
+          .withBody(dto)
+          .expectStatus(201)
+          .stores('userI', 'body.userId');
+      });
+    });
+
     describe('getUserID', () => {
       it('should return the user ID for a valid email', async () => {
         return pactum
@@ -99,16 +126,27 @@ describe('App e2e', () => {
         return pactum
           .spec()
           .get('/users/{email}')
-          .withPathParams('email', 'user1@example.com')
+          .withPathParams('email', 'test1010@example.com')
           .expectStatus(200)
           .stores('ided', 'userId');
+      });
+    });
+
+    describe('getUserID', () => {
+      it('should return the user ID for a valid email', async () => {
+        return pactum
+          .spec()
+          .get('/users/{email}')
+          .withPathParams('email', 'user1@example.com')
+          .expectStatus(200)
+          .stores('userI', 'userId');
       });
     });
 
     describe('Edit user', () => {
       it('should edit user', () => {
         const dto: UpdateUserDto = {
-          email: 'test99@example.com',
+          email: 'test9@example.com',
           firstName: 'Johannu',
           lastName: 'Doe',
           dob: new Date('1990-01-01'),
@@ -126,9 +164,8 @@ describe('App e2e', () => {
           .withBody(dto)
           .withPathParams('UserBeenFollowed', '$S{userId}')
           .expectStatus(200)
-          .expectBodyContains("updatedUser")
-          .expectBodyContains(100)
-          .stores('userI', 'userI')
+          .expectBodyContains(dto.firstName)
+          .expectBodyContains(dto.profession)
           .inspect()
       });
     });
@@ -176,7 +213,7 @@ describe('App e2e', () => {
       it('should trade shares', () => {
         const tradeData: TradeSharesDTO = {
           shareId: '$S{shareIds}',
-          action: 'BUY',
+          action: 'SELL',
           price: 1,
         }
         return pactum
