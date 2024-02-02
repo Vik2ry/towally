@@ -1,34 +1,30 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+// investor.controller.ts
+
+import { Body, Controller, Post, BadRequestException, Param, Get } from '@nestjs/common';
 import { InvestorService } from './investor.service';
-import { CreateInvestorDto } from './dto/create-investor.dto';
-import { UpdateInvestorDto } from './dto/update-investor.dto';
+import { TradeSharesDTO, TradeCurrencyDTO } from './dto/index.dto';
 
 @Controller('investor')
 export class InvestorController {
   constructor(private readonly investorService: InvestorService) {}
 
-  @Post()
-  create(@Body() createInvestorDto: CreateInvestorDto) {
-    return this.investorService.create(createInvestorDto);
+  @Post('trade-shares/:userId')
+  async tradeShares(@Body() tradeData: TradeSharesDTO, @Param('userId') userId: string) {
+    console.log('tradeData of trade shares : ', tradeData);
+    console.log('userId of trade shares : ', userId);
+    return this.investorService.tradeShares(tradeData, userId);
   }
 
-  @Get()
-  findAll() {
-    return this.investorService.findAll();
+  @Post('trade-currency/:userId')
+  async tradeCurrency(@Body() tradeData: TradeCurrencyDTO, @Param('userId') userId: string) {
+    console.log('tradeData of trade-currency: ', tradeData);
+    console.log('userId of trade-currency: ', userId);
+    return this.investorService.tradeCurrency(tradeData, userId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.investorService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInvestorDto: UpdateInvestorDto) {
-    return this.investorService.update(+id, updateInvestorDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.investorService.remove(+id);
+  @Get('share-id/:userId')
+  async getShareIdForUser(@Param('userId') userId: string): Promise<{ shareId: string }> {
+    const shareId = await this.investorService.getShareIdForUser(userId);
+    return { shareId };
   }
 }

@@ -1,34 +1,34 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+// src/admin/admin.controller.ts
+
+import { Controller, Post, Body } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto } from './dto/create-admin.dto';
-import { UpdateAdminDto } from './dto/update-admin.dto';
+import { SetMinimumFollowCostDTO, AdminTradeCurrencyDTO } from './dto/index.dto';
 
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Post()
-  create(@Body() createAdminDto: CreateAdminDto) {
-    return this.adminService.create(createAdminDto);
+  @Post('set-minimum-follow-cost')
+  async setMinimumFollowCost(@Body() setMinimumFollowCostDTO: SetMinimumFollowCostDTO) {
+    console.log('setMinimumFollowCostDTO: ', setMinimumFollowCostDTO);
+    const { minimumCost } = setMinimumFollowCostDTO;
+    return this.adminService.setMinimumFollowCost(minimumCost);
   }
 
-  @Get()
-  findAll() {
-    return this.adminService.findAll();
+  @Post('admin-trade-currency')
+  async adminTradeCurrency(@Body() tradeData: AdminTradeCurrencyDTO) {
+    console.log('tradeData of admin-trade-currency: ', tradeData);
+    return this.adminService.adminTradeCurrency(tradeData);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.adminService.findOne(+id);
+  @Post('freeze-user-account')
+  async freezeUserAccount(@Body() userId: string) {
+    console.log('userId of freeze-user-account: ', userId);
+    return this.adminService.freezeUserAccount(userId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
-    return this.adminService.update(+id, updateAdminDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.adminService.remove(+id);
+  @Post('issue-data-income')
+  async issueDataIncome() {
+    return this.adminService.issueDataIncome();
   }
 }

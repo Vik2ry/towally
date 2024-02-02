@@ -39,9 +39,13 @@ export class UserController {
     @Param('userId') userId: string,
     @Param('userBeenFollowed') userBeenFollowed: string
   ) {
-    console.log('userId:', userId);
-    console.log('userBeenFollowed:', userBeenFollowed)
     return this.userService.followUser(userId, userBeenFollowed);
+  }
+
+  @Patch(':userId/upgrade-account')
+  async upgradeAccount(@Param('userId') userId: string) {
+    console.log("userId: ", userId, 'upgradeAccount');
+    return this.userService.upgradeAccount(userId);
   }
 
 }

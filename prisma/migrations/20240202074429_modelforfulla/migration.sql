@@ -1,0 +1,12 @@
+-- CreateEnum
+CREATE TYPE "Status" AS ENUM ('ACTIVE', 'INACTIVE');
+
+-- AlterTable
+ALTER TABLE "AdminAction" ALTER COLUMN "target" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "FollowIncome" DOUBLE PRECISION DEFAULT 0.00,
+ADD COLUMN     "FollowSpend" DOUBLE PRECISION DEFAULT 0.00,
+ADD COLUMN     "dataIncome" DOUBLE PRECISION DEFAULT 0.00,
+ADD COLUMN     "status" "Status" DEFAULT 'ACTIVE',
+ADD COLUMN     "subscription" BOOLEAN DEFAULT true;

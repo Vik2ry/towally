@@ -28,6 +28,9 @@ export class UserService {
           company,
           links,
           tagline,
+          wallyWallet: 50.0, // Assuming the initial wallet balance is 0.0
+          dataIncome: 0.0, // Assuming the initial follow income is 0.0
+          FollowIncome: 0.0, // Assuming the initial follow income is 0.0
           roleType: 'user', // Assuming it's a regular user
         },
       });
@@ -64,6 +67,8 @@ export class UserService {
               company: null,
               links: [],
               tagline: null,
+              dataIncome: 0.0, // Assuming the initial follow income is 0.0
+              FollowIncome: 0.0, // Assuming the initial follow income is 0.0
               roleType: RoleType.USER, // Assuming it's a regular user
             };
 
@@ -100,7 +105,7 @@ export class UserService {
 
   async getUserId(email: string) {
     // Find the user by email
-    return this.prisma.user.findFirst({
+    const userDetails = await this.prisma.user.findFirst({
       where: {
         email: email,
       },
@@ -108,12 +113,13 @@ export class UserService {
         id: true,
       },
     });
+    return userDetails.id;
   }
 
-  async enterUserData(userId: string, userData: UpdateUserDto): Promise<void> {
+  async enterUserData(userId: string, userData: UpdateUserDto) {
     const dobDate: Date = moment(userData.dob, 'YYYY-MM-DD').toDate();
     try {
-      await this.prisma.user.update({
+      const updatedUser = await this.prisma.user.update({
         where: {
           id: userId
         },
@@ -127,15 +133,22 @@ export class UserService {
           profession: userData.profession,
           company: userData.company,
           links: userData.links,
+          tagline: userData.tagline,
+          roleType: userData.roleType,
+          adminRevenue: userData.adminRevenue,
         }
       });
-      await this.prisma.share.create({
+      const updatedPrice = await this.prisma.share.create({
         data: {
           owner: { connect: { id: userId } }, // Connect to the updated user
           price: 100.0,
         },
+        select: {
+          price: true,
+        },
       });
-      return console.log("User data successfully updated");
+      console.log("User data successfully updated");
+      return { updatedUser, updatedPrice };
     } catch (error) {
       console.log('Error updating user data', error.message)
       throw new BadRequestException('Error updating user data');
@@ -207,5 +220,48 @@ export class UserService {
       throw new BadRequestException('Error following user');
     }
   }
+
+  async upgradeAccount(userId: string) {
+    try {
+      // Fetch user details including subscription status and following count
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          subscription: true,
+          following: {
+            select: {
+              id: true,
+            },
+          },
+          roleType: true,
+        },
+      });
+
+      // Check if the user exists
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Check if the user's roleType is 'user' and they have a subscription and are following at least one user
+      if (user.roleType === 'user' && user.subscription && user.following.length > 0) {
+        // Upgrade the user's account to 'investor'
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            roleType: 'investor',
+          },
+        });
+
+        console.log('User account upgraded to investor');
+      } else {
+        console.log('User account does not meet upgrade criteria');
+      }
+    } catch (error) {
+      console.error('Error upgrading account:', error.message);
+      throw new BadRequestException('Error upgrading account');
+    }
+  }
+
 
 }

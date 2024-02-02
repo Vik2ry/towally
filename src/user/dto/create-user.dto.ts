@@ -8,6 +8,7 @@ import {
     IsDateString,
     IsArray,
     ArrayNotEmpty,
+    IsNumber,
 } from 'class-validator';
 import { Country, RoleType } from "./enums";
 
@@ -52,6 +53,18 @@ export class CreateUserDto {
     @ArrayNotEmpty()
     @IsOptional()
     links?: string[];
+
+    @IsNumber()
+    @IsOptional()
+    FollowIncome?: number;
+
+    @IsNumber()
+    @IsOptional()
+    dataIncome?: number;
+
+    @IsNumber()
+    @IsOptional()
+    wallyWallet?: number;
 
     @IsEnum(RoleType)
     @IsOptional()

@@ -214,6 +214,11 @@ enum RoleType {
   user
 }
 
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id        String   @id @default(uuid())
   firstName String?
@@ -227,7 +232,7 @@ model User {
   zipcode       Int?
   profession    String?
   company       String?
-  links          String[]
+  links         String[]
   shares        Share[]
   tagline       String?
   followers     Follow[]      @relation("UserToFollowers")
@@ -235,6 +240,13 @@ model User {
   transactions  Transaction[] @relation("Buyer")
   transactions2 Transaction[] @relation("Seller")
   roleType      RoleType?
+  dataIncome    Float?        @default(0.00)
+  FollowIncome  Float?        @default(0.00)
+  FollowSpend   Float?        @default(0.00)
+  status        Status?        @default(ACTIVE)
+  subscription  Boolean?       @default(true)
+  wallyWallet   Float?         @default(0.00)
+  adminRevenue  Float?         @default(0.00)
 
   @@map("User")
 }
@@ -303,7 +315,7 @@ model WeeklyIncome {
 model AdminAction {
   id     String @id @default(uuid())
   action String
-  target String
+  target String?
   value  Float?
   // Add other fields as needed
 

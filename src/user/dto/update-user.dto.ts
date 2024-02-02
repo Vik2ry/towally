@@ -8,8 +8,9 @@ import {
     IsDateString,
     IsArray,
     ArrayNotEmpty,
+    IsNumber,
 } from 'class-validator';
-import { Country } from "./enums";
+import { Country, RoleType } from "./enums";
 
 export class UpdateUserDto {
     @IsEmail()
@@ -52,4 +53,12 @@ export class UpdateUserDto {
     @ArrayNotEmpty()
     @IsOptional()
     links?: string[];
+
+    @IsEnum(RoleType)
+    @IsOptional()
+    roleType?: RoleType;
+
+    @IsNumber()
+    @IsOptional()
+    adminRevenue?: number;
 }
