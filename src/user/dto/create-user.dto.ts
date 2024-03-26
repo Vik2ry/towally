@@ -69,8 +69,4 @@ export class CreateUserDto {
     @IsEnum(RoleType)
     @IsOptional()
     roleType?: RoleType;
-
-    @IsNumber()
-    @IsOptional()
-    adminRevenue?: number;
 }

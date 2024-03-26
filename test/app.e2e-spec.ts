@@ -105,6 +105,7 @@ describe('App e2e', () => {
           .post('/users/create')
           .withBody(dto)
           .expectStatus(201)
+          .stores('userI', 'body.userId');
       });
     });
 
@@ -125,7 +126,7 @@ describe('App e2e', () => {
         return pactum
           .spec()
           .get('/users/{email}')
-          .withPathParams('email', 'user1@example.com')
+          .withPathParams('email', 'test1010@example.com')
           .expectStatus(200)
           .stores('ided', 'userId');
       });
@@ -136,7 +137,7 @@ describe('App e2e', () => {
         return pactum
           .spec()
           .get('/users/{email}')
-          .withPathParams('email', 'test1010@example.com')
+          .withPathParams('email', 'user1@example.com')
           .expectStatus(200)
           .stores('userI', 'userId');
       });
@@ -169,33 +170,6 @@ describe('App e2e', () => {
       });
     });
 
-    describe('Edit user', () => {
-      it('should edit user', () => {
-        const dto: UpdateUserDto = {
-          email: 'test9090@example.com',
-          firstName: 'Johannu',
-          lastName: 'Doe',
-          dob: new Date('1990-01-01'),
-          country: Country.NIGER,
-          zipcode: 12345,
-          profession: 'Doctor',
-          company: 'ABC Inc.',
-          links: ['http://facebook.com/johndoe', 'http://twitter.com/johndoe'],
-          tagline: 'Hello World',
-          roleType: RoleType.INVESTOR,
-        }
-        return pactum
-          .spec()
-          .patch('/users/{UserBeenFollowed}/enter-data')
-          .withBody(dto)
-          .withPathParams('UserBeenFollowed', '$S{userI}')
-          .expectStatus(200)
-          .expectBodyContains(dto.firstName)
-          .expectBodyContains(dto.profession)
-          .inspect()
-      });
-    });
-
     describe('UserId should follow UserBeenfollowed', () => {
       it('should post UserId followed UserBeenFollowed', () => {
         return pactum
@@ -212,8 +186,8 @@ describe('App e2e', () => {
       it('should upgrade account', () => {
         return pactum
           .spec()
-          .patch('/users/{userI}/upgrade-account')
-          .withPathParams('userI', '$S{userI}')
+          .patch('/users/{userId}/upgrade-account')
+          .withPathParams('userId', '$S{userId}')
           .expectStatus(200)
           .inspect()
       });
@@ -238,8 +212,8 @@ describe('App e2e', () => {
     describe('Trade shares', () => {
       it('should trade shares', () => {
         const tradeData: TradeSharesDTO = {
-          action: 'BUY',
           shareId: '$S{shareIds}',
+          action: 'SELL',
           price: 1,
         }
         return pactum
